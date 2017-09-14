@@ -1,4 +1,4 @@
-package com.ermilov.spark
+package org.ermilov.spark
 
 import org.apache.spark.streaming.twitter.TwitterUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
@@ -32,6 +32,7 @@ object TwitterApp {
     val sortedTopHashes = topHashes transform {rdd => rdd.sortBy({case(tag, count) => count}, false)}
     println(sortedTopHashes.count())
     sortedTopHashes.print(5)
+    sortedTopHashes.saveAsObjectFiles("/tmp/sorted-top-hashes")
 
     ssc.checkpoint("/tmp/streaming-checkpoint")
     ssc.start()
@@ -50,5 +51,4 @@ object TwitterApp {
     System.setProperty("twitter4j.oauth.accessToken", credentials(1))
     System.setProperty("twitter4j.oauth.accessTokenSecret", credentials(0))
   }
-
 }
