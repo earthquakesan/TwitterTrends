@@ -16,6 +16,7 @@ object TrendVisualizationApp {
     val hdfsUri = scala.util.Properties.envOrElse("HDFS_URI", "hdfs://localhost:8020/")
     val storageFolder = scala.util.Properties.envOrElse("STORAGE_FOLDER", "twitter-trends/")
     val storagePrefix = scala.util.Properties.envOrElse("STORAGE_PREFIX", "top-hashes")
+    val updateInterval = scala.util.Properties.envOrElse("UPDATE_INTERVAL_MS", "30000").toInt
     val sc = new SparkContext(config)
 
     //TODO: Check for Spark connectivity
@@ -34,7 +35,7 @@ object TrendVisualizationApp {
       histogram(topHashesList)
       legend(Seq("HashTags"))
       yAxis("Frequency")
-      Thread.sleep(1000 * 30) //sleep for 30 seconds
+      Thread.sleep(updateInterval)
     }
   }
 
