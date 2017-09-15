@@ -13,6 +13,8 @@ object TwitterApp {
     val sparkMaster = scala.util.Properties.envOrElse("SPARK_MASTER", "local[4]")
     val tweetsLanguage = scala.util.Properties.envOrElse("TWEETS_LANGUAGE", "en")
     val hashTagThreshold = scala.util.Properties.envOrElse("HASH_TAG_THRESHOLD", "0").toInt
+    val hdfsUri = scala.util.Properties.envOrElse("HDFS_URI", "hdfs://localhost:8020/")
+    val storagePrefix = scala.util.Properties.envOrElse("STORAGE_PREFIX", "twitter-trends/top-hashes")
     setTwitterCredentials()
 
     val config = new SparkConf().setMaster(sparkMaster).setAppName("Twitter Trends")
@@ -32,9 +34,10 @@ object TwitterApp {
     val sortedTopHashes = topHashes transform {rdd => rdd.sortBy({case(tag, count) => count}, false)}
     println(sortedTopHashes.count())
     sortedTopHashes.print(5)
-    sortedTopHashes.saveAsObjectFiles("/tmp/sorted-top-hashes")
+    sortedTopHashes.saveAsObjectFiles(hdfsUri + storagePrefix)
 
-    ssc.checkpoint("/tmp/streaming-checkpoint")
+    val streamingCheckpointDir = "twitter-trends/streaming-checkpoint"
+    ssc.checkpoint(hdfsUri + streamingCheckpointDir)
     ssc.start()
     ssc.awaitTermination()
   }
