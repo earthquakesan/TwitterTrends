@@ -17,22 +17,33 @@ object TrendVisualizationApp {
     val storageFolder = scala.util.Properties.envOrElse("STORAGE_FOLDER", "twitter-trends/")
     val storagePrefix = scala.util.Properties.envOrElse("STORAGE_PREFIX", "top-hashes")
     val sc = new SparkContext(config)
-    val objectFileDirs = getObjectFileDirs(hdfsUri, storageFolder, storagePrefix)
 
-    val objectFiles = objectFileDirs map { of => sc.objectFile[Tuple2[String, Int]](of) }
-    val topHashes = objectFiles reduce {_.union(_)}
-    val topHashesAggr = topHashes reduceByKey(_ + _) filter {case(hash, count) => count > 1}
-    val topHashesList = topHashesAggr.collect().toList
-    println(topHashesList)
+    //TODO: Check for Spark connectivity
+    //TODO: Check for HDFS connectivity
 
-    //Charts setup
-    setPort(8000)
-    startServer()
-    histogram(topHashesList)
-    legend(Seq("HashTags"))
-    yAxis("Frequency")
+    //Update loop
+    while(true) {
+      val objectFileDirs = getObjectFileDirs(hdfsUri, storageFolder, storagePrefix)
+      val objectFiles = objectFileDirs map { of => sc.objectFile[Tuple2[String, Int]](of) }
+      val topHashes = objectFiles reduce {_.union(_)}
+      val topHashesAggr = topHashes reduceByKey(_ + _) filter {case(hash, count) => count > 1}
+      val topHashesList = topHashesAggr.collect().toList
+
+      setPort(8000)
+      startServer()
+      histogram(topHashesList)
+      legend(Seq("HashTags"))
+      yAxis("Frequency")
+      Thread.sleep(1000 * 30) //sleep for 30 seconds
+    }
   }
 
+  /** This function returns from HDFS all the directories inside storageFolder which contains storagePrefix
+    * @param hdfsUri
+    * @param storageFolder
+    * @param storagePrefix
+    * @return mutable.ArrayStack[String]
+    */
   def getObjectFileDirs(hdfsUri: String, storageFolder: String, storagePrefix: String): mutable.ArrayStack[String] = {
     val configuration = new Configuration()
     configuration.set("fs.defaultFS", hdfsUri)
@@ -51,6 +62,11 @@ object TrendVisualizationApp {
     objectFileDirs
   }
 
+  /** This function returns from local filesystem all the directories from dir which contain prefix
+    * @param dir
+    * @param prefix
+    * @return mutable.ArrayStack[File]
+    */
   def getObjectFileDirs(dir: String, prefix: String): mutable.ArrayStack[File] = {
     var objectFiles = new mutable.ArrayStack[File]()
 

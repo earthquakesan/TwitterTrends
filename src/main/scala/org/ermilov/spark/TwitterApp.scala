@@ -17,6 +17,9 @@ object TwitterApp {
     val storagePrefix = scala.util.Properties.envOrElse("STORAGE_PREFIX", "twitter-trends/top-hashes")
     setTwitterCredentials()
 
+    //TODO: Check for Spark connectivity
+    //TODO: Check for HDFS connectivity
+
     val config = new SparkConf().setMaster(sparkMaster).setAppName("Twitter Trends")
     val sc = new SparkContext(config)
 
