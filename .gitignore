@@ -64,3 +64,5 @@ fabric.properties
 
 # Ignore twitter keys config
 src/main/resources/twitter_keys.conf
+
+docker-compose.yml-prod

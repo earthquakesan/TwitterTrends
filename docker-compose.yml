@@ -1,4 +1,4 @@
-version: '2' 
+version: '2'
 services:
   namenode:
     image: bde2020/hadoop-namenode:1.1.0-hadoop2.8-java8
@@ -14,7 +14,7 @@ services:
       - 8020:8020
   datanode:
     image: bde2020/hadoop-datanode:1.1.0-hadoop2.8-java8
-    depends_on: 
+    depends_on:
       - namenode
     volumes:
       - ./data/datanode:/hadoop/dfs/data
@@ -40,3 +40,39 @@ services:
       - 8081:8081
     env_file:
       - ./hadoop.env
+  twitter-trends:
+    image: ermilov/twitter-trends
+    restart: always
+    depends_on:
+      - spark-master
+      - namenode
+    environment:
+      - SPARK_MASTER_NAME=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_APPLICATION_MAIN_CLASS=org.ermilov.spark.TwitterApp
+      - BATCH_INTERVAL=30
+      - SPARK_MASTER=spark://spark-master:7077
+      - TWEETS_LANGUAGE=en
+      - HASH_TAG_THRESHOLD=0
+      - HDFS_URI=hdfs://namenode:8020/
+      - STORAGE_PREFIX=twitter-trends/top-hashes
+      - TWITTER_CONSUMER_KEY=
+      - TWITTER_CONSUMER_SECRET=
+      - TWITTER_ACCESS_TOKEN=
+      - TWITTER_ACCESS_TOKEN_SECRET=
+  visualization-app:
+    image: ermilov/twitter-trends
+    restart: always
+    depends_on:
+      - spark-master
+      - namenode
+    environment:
+      - SPARK_MASTER_NAME=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_APPLICATION_MAIN_CLASS=org.ermilov.spark.TrendVisualizationApp
+      - HDFS_URI=hdfs://namenode:8020/
+      - STORAGE_FOLDER=twitter-trends/
+      - STORAGE_PREFIX=top-hashes
+      - UPDATE_INTERVAL_MS=30000
+    ports:
+      - 8000:8000
