@@ -17,9 +17,6 @@ object TwitterApp {
     val storagePrefix = scala.util.Properties.envOrElse("STORAGE_PREFIX", "twitter-trends/top-hashes")
     setTwitterCredentials()
 
-    //TODO: Check for Spark connectivity
-    //TODO: Check for HDFS connectivity
-
     val config = new SparkConf().setMaster(sparkMaster).setAppName("Twitter Trends")
     val sc = new SparkContext(config)
 
@@ -46,15 +43,28 @@ object TwitterApp {
   }
 
   def setTwitterCredentials(): Unit = {
-    val stream = getClass.getResourceAsStream("/twitter_keys.conf")
-    val text = Source.fromInputStream(stream).getLines()
-    var credentials = new mutable.ArrayStack[String]()
-    while(text.hasNext) {
-      credentials.push(text.next().split(" = ")(1))
+    var consumerKey = scala.util.Properties.envOrElse("TWITTER_CONSUMER_KEY", "")
+    var consumerSecret = scala.util.Properties.envOrElse("TWITTER_CONSUMER_SECRET", "")
+    var accessToken = scala.util.Properties.envOrElse("TWITTER_ACCESS_TOKEN", "")
+    var accessTokenSecret = scala.util.Properties.envOrElse("TWITTER_ACCESS_TOKEN_SECRET", "")
+
+    if(Vector(consumerKey, consumerSecret, accessToken, accessTokenSecret).exists(_ == "")) {
+      val stream = getClass.getResourceAsStream("/twitter_keys.conf")
+      val text = Source.fromInputStream(stream).getLines()
+      var credentials = new mutable.ArrayStack[String]()
+      while(text.hasNext) {
+        credentials.push(text.next().split(" = ")(1))
+      }
+      consumerKey = credentials(3)
+      consumerSecret = credentials(2)
+      accessToken = credentials(1)
+      accessTokenSecret = credentials(0)
+
     }
-    System.setProperty("twitter4j.oauth.consumerKey", credentials(3))
-    System.setProperty("twitter4j.oauth.consumerSecret", credentials(2))
-    System.setProperty("twitter4j.oauth.accessToken", credentials(1))
-    System.setProperty("twitter4j.oauth.accessTokenSecret", credentials(0))
+
+    System.setProperty("twitter4j.oauth.consumerKey", consumerKey)
+    System.setProperty("twitter4j.oauth.consumerSecret", consumerSecret)
+    System.setProperty("twitter4j.oauth.accessToken", accessToken)
+    System.setProperty("twitter4j.oauth.accessTokenSecret", accessTokenSecret)
   }
 }

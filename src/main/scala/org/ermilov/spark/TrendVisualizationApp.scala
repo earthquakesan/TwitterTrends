@@ -19,9 +19,6 @@ object TrendVisualizationApp {
     val updateInterval = scala.util.Properties.envOrElse("UPDATE_INTERVAL_MS", "30000").toInt
     val sc = new SparkContext(config)
 
-    //TODO: Check for Spark connectivity
-    //TODO: Check for HDFS connectivity
-
     //Update loop
     while(true) {
       val objectFileDirs = getObjectFileDirs(hdfsUri, storageFolder, storagePrefix)
